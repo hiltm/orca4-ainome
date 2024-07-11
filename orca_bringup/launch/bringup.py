@@ -96,6 +96,12 @@ def generate_launch_description():
         ),
 
         DeclareLaunchArgument(
+            'lawnmower_params_file',
+            default_value=os.path.join(orca_bringup_dir, 'params', 'lawnmower_params.yaml'),
+            description='Full path to the ROS2 parameters file to use for lawnmower mission',
+        ),
+
+        DeclareLaunchArgument(
             'slam',
             default_value='True',
             description='Launch SLAM?',

@@ -52,6 +52,10 @@ class SendGoalResult(Enum):
 def make_pose(x: float, y: float, z: float):
     return PoseStamped(header=Header(frame_id='map'), pose=Pose(position=Point(x=x, y=y, z=z)))
 
+self.declare_parameter('number_of_lanes','1')
+self.declare_parameter('home_position', [0 0 0])
+self.get_parameter('number_of_lanes').get_parameter_value().string_value
+self.get_parameter('home_position').get_parameter_value().string_value
 
 # Go to AUV mode
 go_auv = TargetMode.Goal()
@@ -63,7 +67,7 @@ go_rov.target_mode = TargetMode.Goal.ORCA_MODE_ROV
 
 # Go home (1m deep)
 go_home = FollowWaypoints.Goal()
-go_home.poses.append(make_pose(x=0.0, y=0.0, z=-1.0))
+go_home.poses.append(make_pose(x=home_position(1), y=,home_position(2), z=home_position(3)))
 
 # Dive to 8m
 dive = FollowWaypoints.Goal()

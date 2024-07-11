@@ -1,0 +1,9 @@
+# Params for Orca lawnmower mission:
+
+lawnmower:
+  ros__parameters:
+    home_position: [ 0 0 1 ]
+    home_at_depth: [ 0 0 8 ]
+    number_of_lanes: 5
+    lane_spacing: 20
+    area_dimensions: 10
