@@ -1,3 +1,5 @@
 cmake-build-*
 .cmake-build-*
 .idea
+docker_run.sh
+
