@@ -79,6 +79,41 @@ for _ in range(2):
     delay_loop.poses.append(make_pose(x=0.0, y=0.0, z=-7.0))
 
 
+# lawnmower_loop = FollowWaypoints.Goal()
+
+# lawnmower_loop.poses.append(make_pose(x=0.0, y=0.0, z=-7.0))
+# lawnmower_loop.poses.append(make_pose(x=20.0, y=0.0, z=-7.0))
+# lawnmower_loop.poses.append(make_pose(x=20.0, y=-2.0, z=-7.0))
+# lawnmower_loop.poses.append(make_pose(x=0.0, y=-2.0, z=-7.0))
+# lawnmower_loop.poses.append(make_pose(x=0.0, y=-4.0, z=-7.0))
+# lawnmower_loop.poses.append(make_pose(x=20.0, y=-4.0, z=-7.0))
+# lawnmower_loop.poses.append(make_pose(x=20.0, y=-6.0, z=-7.0))
+# lawnmower_loop.poses.append(make_pose(x=0.0, y=-6.0, z=-7.0))
+# lawnmower_loop.poses.append(make_pose(x=0.0, y=-8.0, z=-7.0))
+# lawnmower_loop.poses.append(make_pose(x=20.0, y=-8.0, z=-7.0))
+# lawnmower_loop.poses.append(make_pose(x=20.0, y=-10.0, z=-7.0))
+# lawnmower_loop.poses.append(make_pose(x=0.0, y=-10.0, z=-7.0))
+
+
+def generate_lawnmower_pattern(lanes, length, width, initial_x, initial_y) :
+    lawnmower_loop = FollowWaypoints.Goal()
+    current_y = initial_y
+    lawnmower_loop.poses.append(make_pose(x=initial_x, y=initial_y, z=-7.0))
+    lane_spacing = width/(lanes-1)
+    for i in range(lanes):
+        if i%2==0:
+            lawnmower_loop.poses.append(make_pose(x= initial_x + length, y=current_y, z=-7.0))
+            lawnmower_loop.poses.append(make_pose(x= initial_x + length, y=current_y + lane_spacing, z=-7.0))
+            current_y=current_y+lane_spacing
+        else:
+            lawnmower_loop.poses.append(make_pose(x= initial_x, y=current_y, z=-7.0))
+            lawnmower_loop.poses.append(make_pose(x= initial_x, y=current_y + lane_spacing, z=-7.0))
+            current_y=current_y+lane_spacing
+
+    lawnmower_loop.poses.append(make_pose(x=initial_x, y=initial_y, z=-7.0))
+    return lawnmower_loop
+
+
 # Send a goal to an action server and wait for the result.
 # Cancel the goal if the user hits ^C (KeyboardInterrupt).
 def send_goal(node, action_client, send_goal_msg) -> SendGoalResult:
@@ -152,7 +187,9 @@ def main():
         print('>>> Setting mode to AUV <<<')
         if send_goal(node, set_target_mode, go_auv) == SendGoalResult.SUCCESS:
             print('>>> Executing mission <<<')
-            send_goal(node, follow_waypoints, delay_loop)
+            # send_goal(node, follow_waypoints, delay_loop)
+            # send_goal(node, follow_waypoints, lawnmower_loop)
+            send_goal(node, follow_waypoints, generate_lawnmower_pattern(lanes=5, length=10, width=10, initial_x=0.0, initial_y=0.0))
 
             print('>>> Setting mode to ROV <<<')
             send_goal(node, set_target_mode, go_rov)
