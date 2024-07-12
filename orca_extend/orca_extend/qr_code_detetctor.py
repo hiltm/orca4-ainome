@@ -24,6 +24,15 @@ class QRCodeDetectorNode(Node):
         self.timer = self.create_timer(timer_period, self.timer_callback)
         self.i = 0
 
+    def simple_subscriber(self):
+        self.subscription = self.create_subscription(
+            Image,
+            '/sereo_right',
+            self.listener_callback,
+            10
+            )
+        self.subscription
+
     def callback(self,data):
         bridge = CvBridge()
 
