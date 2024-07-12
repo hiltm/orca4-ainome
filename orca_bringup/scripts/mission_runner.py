@@ -35,6 +35,7 @@ from enum import Enum
 
 import rclpy
 import rclpy.logging
+from rclpy.node import Node
 from action_msgs.msg import GoalStatus
 from geometry_msgs.msg import Point, Pose, PoseStamped
 from nav2_msgs.action import FollowWaypoints
@@ -52,35 +53,44 @@ class SendGoalResult(Enum):
 def make_pose(x: float, y: float, z: float):
     return PoseStamped(header=Header(frame_id='map'), pose=Pose(position=Point(x=x, y=y, z=z)))
 
-self.declare_parameter('number_of_lanes','1')
-self.declare_parameter('home_position', [0 0 0])
-self.get_parameter('number_of_lanes').get_parameter_value().string_value
-self.get_parameter('home_position').get_parameter_value().string_value
 
-# Go to AUV mode
-go_auv = TargetMode.Goal()
-go_auv.target_mode = TargetMode.Goal.ORCA_MODE_AUV
+class LawnmowerPattern(Node):
+    def __init__(self, bag_file=''):
+            self.conn = sqlite3.connect(bag_file)
+            self.cursor = self.conn.cursor()
+            self.declare_parameter('number_of_lanes','1')
+            self.declare_parameter('home_position', ["0" "0" "0"])
+            self.declare_parameter('home_at_depth', ["0" "0" "0"])
+            self.number_of_lanes = self.get_parameter('number_of_lanes').get_parameter_value().string_value
+            self.home_position = self.get_parameter('home_position').get_parameter_value().string_value
+            self.home_at_depth = self.get_parameter('home_at_depth').get_parameter_value().string_value
 
-# Go to ROV mode
-go_rov = TargetMode.Goal()
-go_rov.target_mode = TargetMode.Goal.ORCA_MODE_ROV
+    def mission(self):
+    
+        # Go to AUV mode
+        go_auv = TargetMode.Goal()
+        go_auv.target_mode = TargetMode.Goal.ORCA_MODE_AUV
 
-# Go home (1m deep)
-go_home = FollowWaypoints.Goal()
-go_home.poses.append(make_pose(x=home_position(1), y=,home_position(2), z=home_position(3)))
+        # Go to ROV mode
+        go_rov = TargetMode.Goal()
+        go_rov.target_mode = TargetMode.Goal.ORCA_MODE_ROV
 
-# Dive to 8m
-dive = FollowWaypoints.Goal()
-dive.poses.append(make_pose(x=0.0, y=0.0, z=-8.0))
+        # Go home (1m deep)
+        go_home = FollowWaypoints.Goal()
+        go_home.poses.append(make_pose(x=self.home_position(1), y=self.home_position(2), z=self.home_position(3)))
 
-# Big loop, will eventually result in a loop closure
-delay_loop = FollowWaypoints.Goal()
-delay_loop.poses.append(make_pose(x=0.0, y=0.0, z=-7.0))
-for _ in range(2):
-    delay_loop.poses.append(make_pose(x=20.0, y=-13.0, z=-7.0))
-    delay_loop.poses.append(make_pose(x=10.0, y=-23.0, z=-7.0))
-    delay_loop.poses.append(make_pose(x=-10.0, y=-8.0, z=-7.0))
-    delay_loop.poses.append(make_pose(x=0.0, y=0.0, z=-7.0))
+        # Dive to 8m
+        dive = FollowWaypoints.Goal()
+        dive.poses.append(make_pose(x=home_at_depth(1), y=home_at_depth(2), z=home_at_depth(3)))
+
+        # Big loop, will eventually result in a loop closure
+        delay_loop = FollowWaypoints.Goal()
+        delay_loop.poses.append(make_pose(x=0.0, y=0.0, z=-7.0))
+        for _ in range(2):
+            delay_loop.poses.append(make_pose(x=20.0, y=-13.0, z=-7.0))
+            delay_loop.poses.append(make_pose(x=10.0, y=-23.0, z=-7.0))
+            delay_loop.poses.append(make_pose(x=-10.0, y=-8.0, z=-7.0))
+            delay_loop.poses.append(make_pose(x=0.0, y=0.0, z=-7.0))
 
 
 # Send a goal to an action server and wait for the result.
@@ -149,17 +159,18 @@ def main():
 
     try:
         node = rclpy.create_node("mission_runner")
+        mission = LawnmowerPattern.mission(self)
 
         set_target_mode = ActionClient(node, TargetMode, '/set_target_mode')
         follow_waypoints = ActionClient(node, FollowWaypoints, '/follow_waypoints')
 
         print('>>> Setting mode to AUV <<<')
-        if send_goal(node, set_target_mode, go_auv) == SendGoalResult.SUCCESS:
+        if send_goal(node, set_target_mode, mission.go_auv) == SendGoalResult.SUCCESS:
             print('>>> Executing mission <<<')
             send_goal(node, follow_waypoints, delay_loop)
 
             print('>>> Setting mode to ROV <<<')
-            send_goal(node, set_target_mode, go_rov)
+            send_goal(node, set_target_mode, mission.go_rov)
 
             print('>>> Mission complete <<<')
         else:
