@@ -18,28 +18,19 @@ class QRCodeDetectorNode(Node):
 
     def __init__(self):
         super().__init__('qr_code_detector')
+        self.image_sub = rospy.Subscriber("/camera_1/image_raw", Image, self.callback)
         self.publisher_ = self.create_publisher(String, 'qr_code_detector_topic', 10)
         timer_period = 0.5  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
         self.i = 0
 
-    def timer_callback(self):
-        msg = String()
-        msg.data = f'Hello World: {self.i}'
-        self.publisher_.publish(msg)
-        self.get_logger().info('Publishing: "%s"' % msg.data)
-        self.i += 1
-
-          def __init__(self):
-    self.image_sub = rospy.Subscriber("/camera_1/image_raw", Image, self.callback)
-
     def callback(self,data):
         bridge = CvBridge()
 
         try:
-        cv_image = bridge.imgmsg_to_cv2(data, "bgr8")
+            cv_image = bridge.imgmsg_to_cv2(data, "bgr8")
         except CvBridgeError as e:
-        rospy.logerr(e)
+            rospy.logerr(e)
 
         (rows,cols,channels) = cv_image.shape
         
@@ -59,7 +50,7 @@ class QRCodeDetectorNode(Node):
         #print (qr_result)
         
         qr_data = qr_result[0].data
-        print qr_data
+        print(qr_data)
 
         (x, y, w, h) = qr_result[0].rect
 
